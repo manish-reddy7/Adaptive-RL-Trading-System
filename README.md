@@ -1,5 +1,7 @@
 # Nifty 50 RL Trading Model + Dashboard Integration
 
+Repository reference: https://idea.unisys.com/D9030
+
 > **Connect your Python RL model with a React dashboard via REST API — Zero model modifications, 100% accuracy preserved**
 
 ## 🎯 What This Is
