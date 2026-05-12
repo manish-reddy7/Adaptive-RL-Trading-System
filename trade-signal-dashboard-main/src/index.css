@@ -1,0 +1,238 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================
+   Nifty 50 PPO Dashboard — Design System
+   All colors MUST be HSL tokens. Never hardcode in components.
+   =========================================================== */
+
+@layer base {
+  :root {
+    /* Light mode (secondary) */
+    --background: 220 30% 97%;
+    --foreground: 222 47% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 8%;
+
+    --primary: 195 90% 45%;
+    --primary-foreground: 222 47% 8%;
+    --primary-glow: 190 95% 60%;
+
+    --secondary: 220 20% 92%;
+    --secondary-foreground: 222 47% 12%;
+
+    --muted: 220 20% 94%;
+    --muted-foreground: 222 15% 40%;
+
+    --accent: 195 80% 92%;
+    --accent-foreground: 222 47% 12%;
+
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 195 90% 45%;
+
+    /* Surfaces */
+    --surface-1: 0 0% 100%;
+    --surface-2: 220 25% 98%;
+    --surface-3: 220 25% 95%;
+
+    /* Signals */
+    --signal-buy: 142 72% 42%;
+    --signal-buy-glow: 142 80% 55%;
+    --signal-sell: 0 84% 58%;
+    --signal-sell-glow: 0 90% 68%;
+    --signal-hold: 38 95% 52%;
+    --signal-hold-glow: 42 100% 62%;
+
+    /* Status */
+    --status-strong: 142 72% 42%;
+    --status-good: 160 70% 45%;
+    --status-ok: 38 95% 52%;
+    --status-weak: 0 84% 58%;
+
+    /* Charts */
+    --chart-grid: 220 20% 88%;
+    --chart-axis: 222 15% 40%;
+    --chart-bull: 142 72% 42%;
+    --chart-bear: 0 84% 58%;
+    --chart-sideways: 220 10% 55%;
+
+    /* Live dot */
+    --live: 142 80% 50%;
+
+    --radius: 0.875rem;
+
+    /* Gradients */
+    --gradient-surface: linear-gradient(145deg, hsl(var(--surface-1)), hsl(var(--surface-2)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-buy: linear-gradient(135deg, hsl(var(--signal-buy)), hsl(var(--signal-buy-glow)));
+    --gradient-sell: linear-gradient(135deg, hsl(var(--signal-sell)), hsl(var(--signal-sell-glow)));
+    --gradient-hold: linear-gradient(135deg, hsl(var(--signal-hold)), hsl(var(--signal-hold-glow)));
+    --gradient-hero: radial-gradient(ellipse at top, hsl(var(--primary) / 0.08), transparent 60%);
+
+    /* Shadows */
+    --shadow-card: 0 1px 0 0 hsl(var(--border)), 0 8px 24px -12px hsl(222 47% 8% / 0.08);
+    --shadow-elevated: 0 1px 0 0 hsl(var(--border)), 0 24px 48px -20px hsl(222 47% 8% / 0.18);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 240 6% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    /* Dark mode (default) — deep navy financial */
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 40% 8%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 40% 8%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 190 95% 55%;
+    --primary-foreground: 222 47% 6%;
+    --primary-glow: 195 100% 65%;
+
+    --secondary: 222 30% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 25% 12%;
+    --muted-foreground: 215 20% 62%;
+
+    --accent: 195 60% 18%;
+    --accent-foreground: 195 100% 80%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 30% 16%;
+    --input: 222 30% 16%;
+    --ring: 190 95% 55%;
+
+    --surface-1: 222 40% 8%;
+    --surface-2: 222 35% 10%;
+    --surface-3: 222 30% 13%;
+
+    --signal-buy: 142 76% 48%;
+    --signal-buy-glow: 142 90% 60%;
+    --signal-sell: 0 84% 60%;
+    --signal-sell-glow: 0 95% 70%;
+    --signal-hold: 38 95% 55%;
+    --signal-hold-glow: 42 100% 65%;
+
+    --status-strong: 142 76% 48%;
+    --status-good: 160 70% 50%;
+    --status-ok: 38 95% 55%;
+    --status-weak: 0 84% 60%;
+
+    --chart-grid: 222 30% 16%;
+    --chart-axis: 215 20% 62%;
+    --chart-bull: 142 76% 48%;
+    --chart-bear: 0 84% 60%;
+    --chart-sideways: 215 15% 55%;
+
+    --live: 142 90% 55%;
+
+    --gradient-surface: linear-gradient(145deg, hsl(var(--surface-1)), hsl(var(--surface-2)));
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-buy: linear-gradient(135deg, hsl(var(--signal-buy)), hsl(var(--signal-buy-glow)));
+    --gradient-sell: linear-gradient(135deg, hsl(var(--signal-sell)), hsl(var(--signal-sell-glow)));
+    --gradient-hold: linear-gradient(135deg, hsl(var(--signal-hold)), hsl(var(--signal-hold-glow)));
+    --gradient-hero: radial-gradient(ellipse at top, hsl(var(--primary) / 0.18), transparent 60%);
+
+    --shadow-card: 0 1px 0 0 hsl(var(--border)), 0 8px 24px -12px hsl(0 0% 0% / 0.5);
+    --shadow-elevated: 0 1px 0 0 hsl(var(--border)), 0 24px 48px -20px hsl(0 0% 0% / 0.6);
+
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 224 76% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'cv11', 'ss01';
+    background-image: var(--gradient-hero);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  .surface-card {
+    background: var(--gradient-surface);
+    box-shadow: var(--shadow-card);
+    @apply border border-border rounded-2xl;
+  }
+
+  .glow-buy {
+    box-shadow: 0 0 0 1px hsl(var(--signal-buy) / 0.4),
+      0 0 40px -4px hsl(var(--signal-buy-glow) / 0.55);
+  }
+  .glow-sell {
+    box-shadow: 0 0 0 1px hsl(var(--signal-sell) / 0.4),
+      0 0 40px -4px hsl(var(--signal-sell-glow) / 0.55);
+  }
+  .glow-hold {
+    box-shadow: 0 0 0 1px hsl(var(--signal-hold) / 0.4),
+      0 0 40px -4px hsl(var(--signal-hold-glow) / 0.55);
+  }
+}
+
+@keyframes pulse-glow-buy {
+  0%, 100% { box-shadow: 0 0 0 1px hsl(var(--signal-buy) / 0.4), 0 0 40px -4px hsl(var(--signal-buy-glow) / 0.4); }
+  50% { box-shadow: 0 0 0 1px hsl(var(--signal-buy) / 0.6), 0 0 60px 0px hsl(var(--signal-buy-glow) / 0.7); }
+}
+@keyframes pulse-glow-sell {
+  0%, 100% { box-shadow: 0 0 0 1px hsl(var(--signal-sell) / 0.4), 0 0 40px -4px hsl(var(--signal-sell-glow) / 0.4); }
+  50% { box-shadow: 0 0 0 1px hsl(var(--signal-sell) / 0.6), 0 0 60px 0px hsl(var(--signal-sell-glow) / 0.7); }
+}
+@keyframes pulse-glow-hold {
+  0%, 100% { box-shadow: 0 0 0 1px hsl(var(--signal-hold) / 0.4), 0 0 40px -4px hsl(var(--signal-hold-glow) / 0.4); }
+  50% { box-shadow: 0 0 0 1px hsl(var(--signal-hold) / 0.6), 0 0 60px 0px hsl(var(--signal-hold-glow) / 0.7); }
+}
+@keyframes live-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.animate-pulse-buy { animation: pulse-glow-buy 2.4s ease-in-out infinite; }
+.animate-pulse-sell { animation: pulse-glow-sell 2.4s ease-in-out infinite; }
+.animate-pulse-hold { animation: pulse-glow-hold 2.4s ease-in-out infinite; }
+.animate-live-pulse { animation: live-pulse 1.6s ease-in-out infinite; }
