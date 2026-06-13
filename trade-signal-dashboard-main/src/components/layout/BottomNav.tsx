@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, MessageSquare, Settings, TrendingUp } from 'lucide-react';
+import { Home, Bot, Settings, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export const BottomNav = () => {
@@ -8,7 +8,7 @@ export const BottomNav = () => {
       <nav className="flex h-16 items-center justify-between rounded-full border border-white/10 bg-black/60 px-8 shadow-2xl backdrop-blur-xl supports-[backdrop-filter]:bg-black/40 pointer-events-auto">
         <NavButton to="/" icon={<Home size={22} />} label="Home" />
         <NavButton to="/market" icon={<TrendingUp size={22} />} label="Market" />
-        <NavButton to="/bot" icon={<MessageSquare size={22} />} label="Bot" />
+        <NavButton to="/bot" icon={<Bot size={22} />} label="Bot" />
         <NavButton to="/settings" icon={<Settings size={22} />} label="Setup" />
       </nav>
     </div>
