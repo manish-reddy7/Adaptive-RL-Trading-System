@@ -79,7 +79,7 @@ Start with one of these based on your needs:
 
 **Backend API**
 *   **GPU Accelerated:** Native CUDA 12.6 support for 10x faster inference.
-*   **Hybrid Chatbot:** Local Phi-3 model with seamless Cloud fallback.
+*   **Hybrid Chatbot:** Local **Ollama** integration (Llama 3.2) with seamless Cloud fallback.
 *   **Macro-Aware:** Dynamic features for global market shifts.
 
 **Frontend Integration**
