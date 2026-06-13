@@ -25,15 +25,15 @@ function hsl(varName: string, alpha = 1) {
 
 function readTokens() {
   return {
-    grid: hsl("--chart-grid", 0.6),
-    axis: hsl("--chart-axis"),
-    bull: hsl("--chart-bull"),
-    bear: hsl("--chart-bear"),
-    sideways: hsl("--chart-sideways"),
+    grid: hsl("--border", 0.3),
+    axis: hsl("--muted-foreground", 0.5),
+    bull: hsl("--signal-buy"),
+    bear: hsl("--signal-sell"),
+    sideways: hsl("--signal-hold"),
     primary: hsl("--primary"),
-    primaryGlow: hsl("--primary-glow"),
+    primaryGlow: hsl("--primary"),
     primaryFill: hsl("--primary", 0.18),
-    surface: hsl("--surface-1"),
+    surface: hsl("--card", 0.8),
     foreground: hsl("--foreground"),
     muted: hsl("--muted-foreground"),
     border: hsl("--border"),

@@ -20,7 +20,7 @@ export const IndicatorSchema = z.object({
 export const HeadlineSchema = z.object({
   text: z.string(),
   sentiment: HeadlineSentimentSchema,
-  source: z.string().optional(),
+  source: z.string().nullable().optional(),
 });
 
 export const NiftyPointSchema = z.object({

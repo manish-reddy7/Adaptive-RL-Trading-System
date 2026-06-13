@@ -21,25 +21,24 @@
 │  │  - /api/all-stocks        → All stocks analysis         │  │
 │  │  - /api/market-regime     → Market conditions           │  │
 │  │  - /api/stocks            → Available symbols           │  │
+│  │  - /api/chat              → Local AI Chatbot (Phi-3)    │  │
 │  │  - /health                → Server status               │  │
-│  │  - /docs                  → Swagger documentation       │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                         │                                        │
 │              Python function imports                             │
-│              (Zero modification)                                 │
+│              (Institutional Upgrades)                            │
 │                         │                                        │
 ├─────────────────────────┴────────────────────────────────────────┤
-│                  RL MODEL (PPO)                                  │
+│              INSTITUTIONAL RL MODELS (PPO)                       │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────┐  │
 │  │  Nifty50_RL_Trading_MultiStock.py                        │  │
 │  │  - process_stock()       → Core analysis                │  │
-│  │  - compute_regime()      → Market regime                │  │
-│  │  - Technical indicators  → TA-lib computations          │  │
-│  │  - Sentiment analysis    → Vader + News APIs            │  │
-│  │  - PPO inference         → Stable-baselines3            │  │
-│  │  - Backtesting           → Performance metrics          │  │
-│  │  - Trained models        → trained_models/*.zip         │  │
+│  │  - Optimized Reward      → Risk-aware (Bear Penalty)    │  │
+│  │  - Macro Data Feed       → USD/INR, US10Y, VIX          │  │
+│  │  - Sector Context        → Industry benchmarks          │  │
+│  │  - PPO inference         → GPU Accelerated (RTX 4050)   │  │
+│  │  - Trained models        → trained_models/ (500k steps) │  │
 │  └──────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────┘
 ```
@@ -69,15 +68,17 @@
 │ 4. FASTAPI SERVER                                               │
 │    - Validates ticker format                                   │
 │    - Loads market regime (cached)                              │
+│    - Fetches Macro Data (VIX, USD/INR, US10Y)                  │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 5. CALL MODEL FUNCTION                                          │
+│ 5. CALL INSTITUTIONAL MODEL FUNCTION                            │
 │    result = process_stock(                                      │
 │        ticker="RELIANCE.NS",                                    │
 │        name="Reliance Industries",                              │
-│        regime_df=...,                                           │
+│        sector_ticker="^CNXENERGY",                              │
+│        macro_df=...,                                            │
 │        bull_pct, bear_pct, sideways_pct                         │
 │    )                                                            │
 └────────────────────────┬────────────────────────────────────────┘
@@ -87,22 +88,18 @@
         ↓                ↓                ↓                  ↓
     ┌────────┐    ┌────────────┐  ┌────────────┐  ┌──────────────┐
     │Download│    │Compute Tech│  │Sentiment   │  │Load PPO Model│
-    │OHLCV   │    │Indicators  │  │Analysis    │  │& Backtest    │
+    │OHLCV   │    │Indicators  │  │(FinBERT)   │  │& GPU Backtest│
     └────────┘    └────────────┘  └────────────┘  └──────────────┘
         │                │                │                  │
         └────────────────┼────────────────┴──────────────────┘
                          │
                          ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│ 6. MODEL PROCESSING (5-10 seconds first run, 2-3s cached)       │
-│    - Load cached features or compute new ones                   │
-│    - Scale features for RL                                      │
-│    - Load trained PPO model from disk                           │
-│    - Run inference on test data                                 │
-│    - Calculate backtest metrics:                                │
-│      * Sharpe Ratio, Sortino, Max DD                            │
-│      * Win Rate, Buy/Sell Precision                             │
-│      * Trading signal (BUY/SELL/HOLD)                           │
+│ 6. MODEL PROCESSING (GPU ACCELERATED)                           │
+│    - Scale features including Macro and Sector Context          │
+│    - Load trained PPO model (Refined 500k steps)                │
+│    - Run inference using NVIDIA RTX 4050 (CUDA 12.6)            │
+│    - Apply Weighted Voting (Policy + Tech + Sent + Regime)      │
 └────────────────────────┬────────────────────────────────────────┘
                          │
                          ↓

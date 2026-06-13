@@ -1,3 +1,4 @@
+
 @echo off
 REM Quick Start Script - Starts Both Backend and Frontend
 

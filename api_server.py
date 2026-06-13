@@ -17,6 +17,10 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env.backend
+load_dotenv(".env.backend")
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +38,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 # ============================================================
 FINNHUB_API_KEY  = "d7np7rpr01qm36379ongd7np7rpr01qm36379oo0"
 NEWSAPI_KEY      = "8d4a630796c94756b96a16efdf92f489"
+ALPHAVANTAGE_KEY = "" # Add your Alpha Vantage key here for better sentiment
 
 CACHE_DIR        = "cache"
 MODEL_DIR        = "trained_models"
@@ -43,16 +48,16 @@ FORCE_REFETCH    = False
 CONCURRENCY      = 2
 
 STOCK_OPTIONS = {
-    "1": ("RELIANCE.NS",   "Reliance Industries"),
-    "2": ("TCS.NS",        "Tata Consultancy Services"),
-    "3": ("HDFCBANK.NS",   "HDFC Bank"),
-    "4": ("INFY.NS",       "Infosys"),
-    "5": ("ICICIBANK.NS",  "ICICI Bank"),
-    "6": ("HINDUNILVR.NS", "Hindustan Unilever"),
-    "7": ("ITC.NS",        "ITC Limited"),
-    "8": ("SBIN.NS",       "State Bank of India"),
-    "9": ("BHARTIARTL.NS", "Bharti Airtel"),
-    "10":("KOTAKBANK.NS",  "Kotak Mahindra Bank"),
+    "1": ("RELIANCE.NS",   "Reliance Industries",      "^CNXENERGY"),
+    "2": ("TCS.NS",        "Tata Consultancy Services", "^CNXIT"),
+    "3": ("HDFCBANK.NS",   "HDFC Bank",               "^NSEBANK"),
+    "4": ("INFY.NS",       "Infosys",                  "^CNXIT"),
+    "5": ("ICICIBANK.NS",  "ICICI Bank",              "^NSEBANK"),
+    "6": ("HINDUNILVR.NS", "Hindustan Unilever",       "^CNXFMCG"),
+    "7": ("ITC.NS",        "ITC Limited",              "^CNXFMCG"),
+    "8": ("SBIN.NS",       "State Bank of India",     "^NSEBANK"),
+    "9": ("BHARTIARTL.NS", "Bharti Airtel",            "^CNXSERVICE"),
+    "10":("KOTAKBANK.NS",  "Kotak Mahindra Bank",     "^NSEBANK"),
 }
 
 TRAIN_START = "2016-01-01"
@@ -81,9 +86,20 @@ from Nifty50_RL_Trading_MultiStock import (
     compute_regime,
 )
 
+from xai_bot import get_bot
+
 # ============================================================
 # Pydantic Response Models
 # ============================================================
+class ChatRequest(BaseModel):
+    message: str
+    ticker: Optional[str] = None
+    analysis_context: Optional[Dict[str, Any]] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    timestamp: str
+
 class Indicator(BaseModel):
     name: str
     value: float
@@ -175,12 +191,12 @@ def get_market_regime():
             return _regime_cache
     
     try:
-        logger.info("Computing market regime...")
-        n_idx, reg_df, b_p, br_p, s_p = compute_regime()
+        logger.info("Computing market regime and fetching macros...")
+        n_idx, macro_df, b_p, br_p, s_p = compute_regime()
         
         _regime_cache = {
             'nifty_data': n_idx,
-            'regime_df': reg_df,
+            'macro_df': macro_df,
             'bull_pct': b_p,
             'bear_pct': br_p,
             'sideways_pct': s_p
@@ -199,7 +215,7 @@ def get_market_regime():
 @app.get("/health", response_model=HealthResponse)
 async def health():
     """Health check endpoint"""
-    stocks = [f"{tick} - {name}" for _, (tick, name) in STOCK_OPTIONS.items()]
+    stocks = [f"{tick} - {name}" for _, (tick, name, _) in STOCK_OPTIONS.items()]
     return HealthResponse(
         status="healthy",
         model_loaded=True,
@@ -223,7 +239,7 @@ async def analyze(ticker: str = Query(..., description="Stock ticker symbol (e.g
         ticker = ticker.upper().strip()
         
         # Validate ticker
-        valid_tickers = [tick for _, (tick, _) in STOCK_OPTIONS.items()]
+        valid_tickers = [tick for _, (tick, _, _) in STOCK_OPTIONS.items()]
         if ticker not in valid_tickers:
             raise HTTPException(
                 status_code=400,
@@ -232,7 +248,7 @@ async def analyze(ticker: str = Query(..., description="Stock ticker symbol (e.g
         
         # Get stock name
         stock_name = next(
-            (name for _, (tick, name) in STOCK_OPTIONS.items() if tick == ticker),
+            (name for _, (tick, name, _) in STOCK_OPTIONS.items() if tick == ticker),
             ticker
         )
         
@@ -241,11 +257,18 @@ async def analyze(ticker: str = Query(..., description="Stock ticker symbol (e.g
         # Get market regime
         regime_data = get_market_regime()
         
+        # Get sector ticker
+        sector_ticker = next(
+            (sect for _, (tick, _, sect) in STOCK_OPTIONS.items() if tick == ticker),
+            "^CNXIT" # Fallback
+        )
+        
         # Process the stock using the original model
         result = process_stock(
             ticker=ticker,
             name=stock_name,
-            regime_df=regime_data['regime_df'],
+            sector_ticker=sector_ticker,
+            macro_df=regime_data['macro_df'],
             bull_pct=regime_data['bull_pct'],
             bear_pct=regime_data['bear_pct'],
             sideways_pct=regime_data['sideways_pct']
@@ -280,13 +303,14 @@ async def analyze_all():
                 executor.submit(
                     process_stock,
                     tick, name,
-                    regime_data['regime_df'],
+                    next((s for _, (t, _, s) in STOCK_OPTIONS.items() if t == tick), "^CNXIT"),
+                    regime_data['macro_df'],
                     regime_data['bull_pct'],
                     regime_data['bear_pct'],
                     regime_data['sideways_pct']
                 ): (tick, name)
-                for _, (tick, name) in STOCK_OPTIONS.items()
-            }
+                for _, (tick, name, _) in STOCK_OPTIONS.items()
+                }
             
             for future in as_completed(futures):
                 tick, name = futures[future]
@@ -334,9 +358,32 @@ async def get_stocks():
     """Get list of available stocks"""
     stocks = [
         {"id": idx, "ticker": tick, "name": name}
-        for idx, (tick, name) in STOCK_OPTIONS.items()
+        for idx, (tick, name, _) in STOCK_OPTIONS.items()
     ]
     return stocks
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """
+    Chat with the Support & XAI Bot
+    """
+    bot = get_bot()
+    if not bot:
+        raise HTTPException(status_code=503, detail="Support bot is not configured (missing API key)")
+    
+    try:
+        response_text = await bot.get_response(
+            message=request.message,
+            ticker=request.ticker,
+            analysis_context=request.analysis_context
+        )
+        return ChatResponse(
+            response=response_text,
+            timestamp=datetime.now().isoformat()
+        )
+    except Exception as e:
+        logger.error(f"Error in chat endpoint: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================
 # Helper Functions
@@ -385,13 +432,17 @@ def _transform_model_output(result: Dict[str, Any], regime_data: Dict) -> Analys
         # Headlines (from model result)
         headlines = []
         if 'Headlines' in result and result['Headlines']:
-            for headline_text in result['Headlines'][:5]:
-                headlines.append(Headline(text=headline_text, sentiment="neu"))
+            for h in result['Headlines'][:5]:
+                h_text = h.get('text', '') if isinstance(h, dict) else h
+                h_score = h.get('score', 0) if isinstance(h, dict) else 0
+                sent_label = "pos" if h_score > 0.1 else "neg" if h_score < -0.1 else "neu"
+                headlines.append(Headline(text=h_text, sentiment=sent_label))
         
-        # Sentiment chart (dummy data for now, can be enriched)
+        # Sentiment chart
+        raw_hist = result.get('Sentiment History', [])
         sentiment_chart = SentimentChart(
-            dates=[datetime.now().strftime("%Y-%m-%d")],
-            scores=[0.0]
+            dates=[item['date'] for item in raw_hist] if raw_hist else [datetime.now().strftime("%Y-%m-%d")],
+            scores=[item['score'] for item in raw_hist] if raw_hist else [0.0]
         )
         
         # Market regime
@@ -416,8 +467,14 @@ def _transform_model_output(result: Dict[str, Any], regime_data: Dict) -> Analys
         )
         
         # Calculate scores (0-100 scale)
-        technical_score = (win_rate * 50 + (min(sharpe, 5) / 5) * 50)
-        sentiment_score = 0.0  # From headlines if available
+        # Use institutional Technical Strength (current setup) weighted with model performance
+        setup_score = float(result.get('Technical Strength', 50))
+        performance_score = (win_rate * 50 + (min(max(0, sharpe), 3) / 3) * 50)
+        
+        technical_score = setup_score * 0.7 + performance_score * 0.3
+        
+        sentiment_val = result.get('Sentiment Score', 0.0)
+        sentiment_score = (sentiment_val + 1) * 50  # Map -1..1 to 0..100
         regime_score = regime_data['bull_pct'] if signal_value > 0 else regime_data['bear_pct']
         
         return Analysis(
@@ -446,9 +503,26 @@ def _transform_model_output(result: Dict[str, Any], regime_data: Dict) -> Analys
 @app.on_event("startup")
 async def startup_event():
     logger.info("🚀 API Server Starting...")
+    
+    # Initialize Bot
+    try:
+        bot_mode = os.getenv("CHATBOT_MODE", "local").lower()
+        logger.info(f"🤖 Chatbot Mode: {bot_mode}")
+        if bot_mode == "local":
+            logger.info("⏳ Initializing Local LLM (Phi-3). This may take a few minutes on the first run...")
+        
+        bot = get_bot()
+        if bot:
+            logger.info("✅ Support Bot Ready.")
+        else:
+            logger.warning("⚠️ Support Bot failed to initialize.")
+    except Exception as e:
+        logger.warning(f"🤖 Support Bot: Failed to initialize ({e})")
+        
     logger.info(f"📊 Available stocks: {len(STOCK_OPTIONS)}")
     logger.info(f"💾 Cache directory: {CACHE_DIR}")
     logger.info(f"🤖 Model directory: {MODEL_DIR}")
+    logger.info("🚀 API Server Ready!")
 
 @app.on_event("shutdown")
 async def shutdown_event():

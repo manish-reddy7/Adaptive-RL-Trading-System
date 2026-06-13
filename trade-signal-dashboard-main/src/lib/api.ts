@@ -101,5 +101,41 @@ export async function fetchAvailableStocks() {
   }
 }
 
+/**
+ * Sends a message to the Support & XAI Bot
+ */
+export async function sendChatMessage(
+  message: string,
+  ticker?: string,
+  analysisContext?: any
+): Promise<string> {
+  if (!API_BASE) {
+    await new Promise((r) => setTimeout(r, 800));
+    return "The bot is currently in offline/mock mode. Please connect the backend to chat with Gemini.";
+  }
+
+  const url = `${API_BASE}/api/chat`;
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json" 
+      },
+      body: JSON.stringify({ message, ticker, analysis_context: analysisContext }),
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.text();
+      throw new ApiError(`Chat API returned ${res.status}: ${errorData}`, res.status);
+    }
+    
+    const data = await res.json();
+    return data.response;
+  } catch (e) {
+    throw new ApiError(`Error communicating with Gemini: ${(e as Error).message}`);
+  }
+}
+
 export const isUsingMock = !API_BASE;
 

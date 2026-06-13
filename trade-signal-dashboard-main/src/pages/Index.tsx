@@ -1,30 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/dashboard/Header";
-import { SignalHero } from "@/components/dashboard/SignalHero";
+import { HeroSignal } from "@/components/dashboard/HeroSignal";
 import { ScoreCard } from "@/components/dashboard/ScoreCard";
 import { IndicatorsPanel } from "@/components/dashboard/IndicatorsPanel";
 import { SentimentPanel } from "@/components/dashboard/SentimentPanel";
 import { RegimePanel } from "@/components/dashboard/RegimePanel";
 import { BacktestPanel } from "@/components/dashboard/BacktestPanel";
+import { ChatBot } from "@/components/dashboard/ChatBot";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { useAnalysis } from "@/hooks/useAnalysis";
 import { isUsingMock } from "@/lib/api";
 import { NIFTY_TICKERS } from "@/lib/constants";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 12 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] as const },
-  }),
-};
-
 export default function Index() {
-  const [ticker, setTicker] = useState<string>(NIFTY_TICKERS[5].ticker); // Kotak default
+  const [ticker, setTicker] = useState<string>(NIFTY_TICKERS[0].ticker); // Reliance default
   const queryClient = useQueryClient();
   const { data, isLoading, isFetching, error, dataUpdatedAt, refetch } = useAnalysis(ticker);
   const lastErrorRef = useRef<string | null>(null);
@@ -62,7 +54,7 @@ export default function Index() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="animate-fade-in">
       <Header
         ticker={ticker}
         onTickerChange={setTicker}
@@ -72,64 +64,71 @@ export default function Index() {
         hasError={!!error && !data}
       />
 
-      <main className="container py-6 md:py-8">
-        {isLoading || !data ? (
-          <DashboardSkeleton />
-        ) : (
-          <motion.div
-            key={ticker}
-            initial="hidden"
-            animate="show"
-            variants={{ show: { transition: { staggerChildren: 0.04 } } }}
-            className="space-y-5"
-          >
-            <motion.div custom={0} variants={fadeUp}>
-              <SignalHero
-                signal={data.signal}
-                actionValue={data.action_value}
-                ticker={data.ticker}
-                name={data.name}
-              />
+      <div className="mt-8">
+        <AnimatePresence mode="wait">
+          {isLoading || !data ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-12"
+            >
+              <DashboardSkeleton />
             </motion.div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <motion.div custom={1} variants={fadeUp}>
-                <ScoreCard label="Technical Score" score={data.technical_score} description="Price-action and indicator confluence" />
-              </motion.div>
-              <motion.div custom={2} variants={fadeUp}>
-                <ScoreCard label="Sentiment Score" score={data.sentiment_score} description="News + headline polarity" />
-              </motion.div>
-              <motion.div custom={3} variants={fadeUp}>
-                <ScoreCard label="Regime Score" score={data.regime_score} description="Macro market context" />
-              </motion.div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-              <motion.div custom={4} variants={fadeUp}>
-                <IndicatorsPanel indicators={data.indicators} />
-              </motion.div>
-              <motion.div custom={5} variants={fadeUp}>
-                <SentimentPanel
-                  dates={data.sentiment_chart.dates}
-                  scores={data.sentiment_chart.scores}
-                  headlines={data.headlines}
+          ) : (
+            <motion.div
+              key={ticker}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-12"
+            >
+              {/* Hero Section */}
+              <section className="mb-16">
+                <HeroSignal
+                  signal={data.signal}
+                  ticker={data.ticker}
+                  name={data.name}
                 />
-              </motion.div>
-              <motion.div custom={6} variants={fadeUp}>
-                <RegimePanel regime={data.market_regime} />
-              </motion.div>
-            </div>
+              </section>
 
-            <motion.div custom={7} variants={fadeUp}>
-              <BacktestPanel backtest={data.backtest} />
+              {/* Data Modules (Staggered Entry) */}
+              <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <ScoreCard delay={0.1} label="Technical Score" score={data.technical_score} description="Price-action and indicator confluence" />
+                <ScoreCard delay={0.2} label="Sentiment Score" score={data.sentiment_score} description="News + headline polarity" />
+                <ScoreCard delay={0.3} label="Regime Score" score={data.regime_score} description="Macro market context" />
+              </section>
+
+              <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                  <IndicatorsPanel indicators={data.indicators} />
+                </div>
+                <div className="animate-fade-up" style={{ animationDelay: '0.5s' }}>
+                  <SentimentPanel
+                    dates={data.sentiment_chart.dates}
+                    scores={data.sentiment_chart.scores}
+                    headlines={data.headlines}
+                  />
+                </div>
+                <div className="animate-fade-up" style={{ animationDelay: '0.6s' }}>
+                  <RegimePanel regime={data.market_regime} />
+                </div>
+              </section>
+
+              <section className="animate-fade-up" style={{ animationDelay: '0.7s' }}>
+                <BacktestPanel backtest={data.backtest} />
+              </section>
             </motion.div>
-          </motion.div>
-        )}
-      </main>
+          )}
+        </AnimatePresence>
+      </div>
 
-      <footer className="container py-8 text-center text-xs text-muted-foreground">
+      <footer className="mt-16 py-8 text-center text-xs text-foreground/40 font-medium">
         Recommendations are model outputs, not financial advice. Auto-refreshes every 5 minutes.
       </footer>
+
+      <ChatBot currentAnalysis={data} />
     </div>
   );
 }
