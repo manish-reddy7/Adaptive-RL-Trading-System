@@ -504,18 +504,19 @@ def _transform_model_output(result: Dict[str, Any], regime_data: Dict) -> Analys
 async def startup_event():
     logger.info("🚀 API Server Starting...")
     
-    # Initialize Bot
+    # Initialize Local Bot (Ollama)
     try:
-        bot_mode = os.getenv("CHATBOT_MODE", "local").lower()
-        logger.info(f"🤖 Chatbot Mode: {bot_mode}")
-        if bot_mode == "local":
-            logger.info("⏳ Initializing Local LLM (Phi-3). This may take a few minutes on the first run...")
-        
+        logger.info("🤖 Mode: Strict Local (Ollama)")
         bot = get_bot()
-        if bot:
-            logger.info("✅ Support Bot Ready.")
+        
+        # Check if Ollama is actually reachable
+        is_up = await bot.check_connection()
+        if is_up:
+            logger.info("✅ Local Ollama Bot Ready.")
         else:
-            logger.warning("⚠️ Support Bot failed to initialize.")
+            logger.warning("⚠️ Local Ollama is NOT running on http://localhost:11434")
+            logger.warning("⚠️ Chat features will be unavailable until 'ollama serve' is run.")
+            
     except Exception as e:
         logger.warning(f"🤖 Support Bot: Failed to initialize ({e})")
         
